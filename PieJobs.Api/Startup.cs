@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using NJsonSchema.Generation;
 
 namespace PieJobs.Api
 {
@@ -32,6 +33,14 @@ namespace PieJobs.Api
 
             services.AddScoped<IJobsService, JobsService>();
             
+            
+            services.AddOpenApiDocument(document =>
+            {
+                document.Description = "FitTick Api";
+                document.DefaultReferenceTypeNullHandling = ReferenceTypeNullHandling.Null;
+                document.DefaultResponseReferenceTypeNullHandling = ReferenceTypeNullHandling.NotNull;
+            });
+            
             services.AddHostedService<JobExecutorHostedService>();
         }
 
@@ -41,8 +50,13 @@ namespace PieJobs.Api
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "PieJobs.Api v1"));
+                
+                app.UseCors(
+                    options => options.SetIsOriginAllowed(x => _ = true).AllowAnyMethod().AllowAnyHeader().AllowCredentials()
+                );
+                app.UseDeveloperExceptionPage();
+                app.UseOpenApi(p => p.Path = "/swagger/{documentName}/swagger.yaml");
+                app.UseSwaggerUi3(p => p.DocumentPath = "/swagger/{documentName}/swagger.yaml");
             }
 
             app.UseHttpsRedirection();
