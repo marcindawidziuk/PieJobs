@@ -12,6 +12,9 @@ namespace PieJobs.Services
     {
         Task<int> ScheduleJob(int jobDefinitionId);
         Task<List<JobDto>> GetAll();
+        Task<int?> GetNextJob();
+        Task<string> ExecuteJob(int id);
+        Task SetStatus(int jobId, JobStatus jobStatus);
     }
 
     public class JobDto
@@ -22,6 +25,7 @@ namespace PieJobs.Services
         public DateTime? FinishedDateTimeUtc { get; set; }
         public string Command { get; set; }
         public JobStatus Status { get; set; }
+        public string JobDefinitionName { get; set; }
     }
 
     public class JobsService : IJobsService
@@ -50,6 +54,7 @@ namespace PieJobs.Services
 
             var job = await db.Jobs.SingleAsync(x => x.Id == id);
             job.StartedDateTimeUtc = DateTime.UtcNow;
+            job.Status = JobStatus.InProgress;
             await db.SaveChangesAsync();
 
             // Start the child process.
@@ -105,12 +110,15 @@ namespace PieJobs.Services
                 .Select(x => new JobDto()
                 {
                     Id = x.Id,
+                    JobDefinitionName = x.JobDefinition.Name,
                     Status = x.Status,
                     ScheduleDateTimeUtc = x.ScheduleDateTimeUtc,
                     StartedDateTimeUtc = x.StartedDateTimeUtc,
                     FinishedDateTimeUtc = x.FinishedDateTimeUtc,
                     Command = x.Command
-                }).ToListAsync();
+                })
+                .OrderByDescending(x => x.ScheduleDateTimeUtc)
+                .ToListAsync();
 
         }
     }

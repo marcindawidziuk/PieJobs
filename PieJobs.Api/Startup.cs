@@ -1,18 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using PieJobs.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using NJsonSchema.Generation;
+using PieJobs.Api.Authentication;
+using PieJobs.Data;
 
 namespace PieJobs.Api
 {
@@ -31,8 +28,30 @@ namespace PieJobs.Api
             services.AddControllers();
             services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "PieJobs.Api", Version = "v1" }); });
 
-            services.AddScoped<IJobsService, JobsService>();
+            var databasePath = Configuration["DatabasePath"];
+
+            services
+                // .AddEntityFrameworkSqlite()
+                .AddDbContextFactory<ApplicationDbContext>(a => a.UseSqlite($"Data Source={databasePath}"));
+                //TODO: UseMemoryCache?
+                // .AddDbContextFactory<ApplicationDbContext>(a => a.Use(Configuration.GetConnectionString("DefaultConnection")));
+                
+            // services.AddAuthentication(
+            //         CertificateAuthenticationDefaults.AuthenticationScheme)
+            //     .AddCertificate();
             
+            services
+                .AddAuthentication(ApiAuthenticationSchemeOptions.DefaultSchemeName)
+                .AddScheme<ApiAuthenticationSchemeOptions, ApiAuthenticationHandler>(
+                    ApiAuthenticationSchemeOptions.DefaultSchemeName, 
+                    null);
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<IContextFactory, ContextFactory>();
+            services.AddScoped<IJobsService, JobsService>();
+            services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<IJobDefinitionService, JobDefinitionService>();
+            services.AddScoped<IUsersService, UsersService>();
             
             services.AddOpenApiDocument(document =>
             {
@@ -50,7 +69,7 @@ namespace PieJobs.Api
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                
+
                 app.UseCors(
                     options => options.SetIsOriginAllowed(x => _ = true).AllowAnyMethod().AllowAnyHeader().AllowCredentials()
                 );
@@ -63,9 +82,17 @@ namespace PieJobs.Api
 
             app.UseRouting();
 
+            app.UseAuthentication();
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+
+            var scope = app.ApplicationServices.CreateScope();
+            var contextFactory = scope.ServiceProvider.GetRequiredService<IContextFactory>();
+            var db = contextFactory.Create();
+            db.Database.Migrate();
+
         }
     }
 }

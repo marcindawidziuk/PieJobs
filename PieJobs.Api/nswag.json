@@ -103,7 +103,7 @@
       "enumNameGeneratorType": null,
       "serviceHost": null,
       "serviceSchemes": null,
-      "output": "../FitTick/src/services/api.generated.clients.ts"
+      "output": "../PieJobs.UI/src/services/api.generated.clients.ts"
     }
   }
 }

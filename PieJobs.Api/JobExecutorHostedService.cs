@@ -5,6 +5,7 @@ using PieJobs.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using PieJobs.Data;
 
 namespace PieJobs.Api
 {
@@ -30,11 +31,21 @@ namespace PieJobs.Api
             {
                 try
                 {
-                    var service = _serviceProvider.GetRequiredService<JobsService>();
+                    using var scope = _serviceProvider.CreateScope();
+                    var service = scope.ServiceProvider.GetRequiredService<IJobsService>();
                     var nextJob = await service.GetNextJob();
                     if (nextJob != null)
                     {
-                        await service.ExecuteJob(nextJob.Value);
+                        try
+                        {
+                            await service.ExecuteJob(nextJob.Value);
+                            await service.SetStatus(nextJob.Value, JobStatus.Completed);
+                        }
+                        catch (Exception ex)
+                        {
+                            await service.SetStatus(nextJob.Value, JobStatus.Failed);
+                            _logger.LogError(ex, "Error occurred executing job {NextJob}", nextJob);
+                        }
                     }
                 }
                 catch (Exception ex)

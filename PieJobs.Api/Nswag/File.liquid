@@ -44,7 +44,8 @@ import * as ng from 'angular';
 {%         endif -%}
 {%         if Framework.IsAxios -%}
 
-import axios, { AxiosError, AxiosStatic, AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
+import {appAxiosInstance} from "./AppAxiosInstance";
 
 {%         endif -%}
 {%         if Framework.IsKnockout -%}

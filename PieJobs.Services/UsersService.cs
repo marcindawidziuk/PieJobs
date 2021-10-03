@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using PieJobs.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +8,14 @@ namespace PieJobs.Services
     public interface IUsersService
     {
         public Task<LoginResultDto> Login(string userName, string password);
-        public Task SetPassword(string userName, string password);
+        public Task SetPassword(int userId, string password);
+        public Task<UserDetailsDto> GetDetails(int userId);
+    }
+
+    public class UserDetailsDto
+    {
+        public string UserName { get; set; }
+        public string DisplayName { get; set; }
     }
 
     public class LoginResultDto
@@ -32,7 +40,7 @@ namespace PieJobs.Services
         {
             await using var db = _contextFactory.Create();
 
-            var user = await db.Users.SingleOrDefaultAsync(x => x.Name == userName);
+            var user = await db.Users.SingleOrDefaultAsync(x => x.UserName == userName);
             if (user == null)
             {
                 return new LoginResultDto
@@ -42,7 +50,7 @@ namespace PieJobs.Services
                 };
             }
             
-            var isValid = _passwordService.IsValid(password, password);
+            var isValid = _passwordService.IsValid(password, user.Password);
             if (!isValid)
             {
                 return new LoginResultDto
@@ -59,15 +67,29 @@ namespace PieJobs.Services
             };
         }
 
-        public async Task SetPassword(string userName, string password)
+        public async Task SetPassword(int userId, string password)
         {
             await using var db = _contextFactory.Create();
 
-            var user = await db.Users.SingleAsync(x => x.Name == userName);
+            var user = await db.Users.SingleAsync(x => x.Id == userId);
             var hashedPassword = _passwordService.HashPassword(password);
             user.Password = hashedPassword;
             
             await db.SaveChangesAsync();
+        }
+
+        public async Task<UserDetailsDto> GetDetails(int userId)
+        {
+            await using var db = _contextFactory.Create();
+
+            return await db.Users
+                .Where(x => x.Id == userId)
+                .Select(x => new UserDetailsDto
+                {
+                    UserName = x.UserName,
+                    DisplayName = x.DisplayName
+                }).SingleAsync();
+
         }
     }
 }

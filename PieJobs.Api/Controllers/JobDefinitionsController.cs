@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using PieJobs.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,25 +14,28 @@ namespace PieJobs.Api.Controllers
             _jobDefinitionService = jobDefinitionService;
         }
 
+        [Authorize]
         [HttpPost("add")]
         public Task<int> AddJobDefinition(AddJobDefinitionDto dto)
         {
             return _jobDefinitionService.AddJobDefinition(dto);
         }
 
+        [Authorize]
         [HttpPost("edit")]
         public Task EditJobDefinition(int jobDefinitionId, AddJobDefinitionDto dto)
         {
             return _jobDefinitionService.EditJobDefinition(jobDefinitionId, dto);
         }
 
-        [HttpDelete("edit")]
+        [Authorize]
+        [HttpDelete("delete")]
         public Task DeleteJobDefinition(int jobDefinitionId)
         {
             return _jobDefinitionService.DeleteJobDefinition(jobDefinitionId);
         }
 
-        [HttpGet("get")]
+        [HttpGet("get-all")]
         public Task<List<JobDefinitionDto>> GetAll()
         {
             return _jobDefinitionService.GetAll();

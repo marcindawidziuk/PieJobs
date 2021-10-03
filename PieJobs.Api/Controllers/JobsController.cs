@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using PieJobs.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,6 +14,7 @@ namespace PieJobs.Api.Controllers
             _jobsService = jobsService;
         }
 
+        [Authorize]
         [HttpPost("schedule")]
         public async Task<int> ScheduleJob(int jobDefinitionId)
         {
