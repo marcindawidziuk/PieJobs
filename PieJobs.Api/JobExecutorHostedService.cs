@@ -53,7 +53,7 @@ namespace PieJobs.Api
                     _logger.LogError(ex, "Error occurred executing");
                 }
                 
-                await Task.Delay(10, stoppingToken);
+                await Task.Delay(1000, stoppingToken);
             }
         }
 

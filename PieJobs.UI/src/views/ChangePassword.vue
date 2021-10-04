@@ -1,10 +1,10 @@
 ﻿<template>
   <div>
-    <span>Password</span>
-    <input type="password" v-model="password">
-    <span>Confirm Password</span>
-    <input type="password" v-model="passwordConfirmation">
-    <button @click="login" :disabled="!canChangePassword">Change password</button>
+    <span class="text-gray-50 block m-2">Password</span>
+    <input type="password" v-model="password" class="m-2 text-black">
+    <span class="text-gray-50 block m-2">Confirm Password</span>
+    <input type="password" v-model="passwordConfirmation" class="m-2 text-black">
+    <button @click="login" :disabled="!canChangePassword" class="bg-green-400 p-1 rounded block m-2">Change password</button>
   </div>
 </template>
 

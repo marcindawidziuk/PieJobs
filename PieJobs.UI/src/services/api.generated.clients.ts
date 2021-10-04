@@ -325,8 +325,10 @@ export class JobsClient {
         return Promise.resolve<number>(<any>null);
     }
 
-    get(  cancelToken?: CancelToken | undefined): Promise<JobDto[]> {
-        let url_ = this.baseUrl + "/api/Jobs/get";
+    get(maximum?: number | null | undefined , cancelToken?: CancelToken | undefined): Promise<JobDto[]> {
+        let url_ = this.baseUrl + "/api/Jobs/get?";
+        if (maximum !== undefined && maximum !== null)
+            url_ += "maximum=" + encodeURIComponent("" + maximum) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ = <AxiosRequestConfig>{

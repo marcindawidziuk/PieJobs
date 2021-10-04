@@ -7,21 +7,26 @@ if (userStore.getState().token) {
 </script>
 
 <template>
-  <div>
-    <header class="bg-white shadow">
-      <span class="text-xl inline-block ml-3">PieJobs</span>
-      <div class="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8 inline-block">
-        <router-link class="mx-2" to="/">Dashboard</router-link>
-        <router-link v-if="userStore.getUser()" class="mx-2" to="/jobs">Jobs</router-link>
-        <a href="#" @click="userStore.logout()" class="mx-2" v-if="userStore.getUser()">Logout</a>
-        <router-link to="/login" class="mx-2" v-else>
-          Login
-        </router-link>
-        <router-link to="/password" class="mx-2" v-if="userStore.getUser()">Change password</router-link>
+  <div class="flex flex-col h-screen justify-between">
+    <header class="bg-gray-800 shadow text-white">
+      <router-link class="text-xl inline-block ml-3 text-white" to="/">PieJobs</router-link>
+      <div class="px-2 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8 inline-block">
+        <div class="flex justify-between">
+          <router-link v-if="userStore.getUser()" class="mr-2" to="/jobs">Configuration</router-link>
+          <a href="#" @click="userStore.logout()" class="mx-2" v-if="userStore.getUser()">Logout</a>
+          <router-link to="/login" class="mx-2" v-else>
+            Login
+          </router-link>
+          <router-link to="/password" class="hidden mx-2" v-if="userStore.getUser()">Change password</router-link>
+        </div>
       </div>
     </header>
-    <main>
+    <main class="mb-auto">
       <router-view />
     </main>
+    <footer class="text-gray-400 m-1">
+      <router-link v-if="userStore.getUser()" to="/password" class="mx-2">Change password</router-link>
+      <a href="https://github.com/marcindawidziuk/PieJobs" class="mx-2">Github</a>
+  </footer>
   </div>
 </template>

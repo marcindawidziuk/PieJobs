@@ -22,9 +22,9 @@ namespace PieJobs.Api.Controllers
         }
         
         [HttpPost("get")]
-        public async Task<List<JobDto>> GetAll()
+        public async Task<List<JobDto>> GetAll(int? maximum)
         {
-            return await _jobsService.GetAll();
+            return await _jobsService.GetAll(maximum);
         }
     }
 }

@@ -1,27 +1,30 @@
 ﻿<template>
   <div>
     <ul>
-      <li class="bg-purple-50 p-2 m-1" v-for="jobDefinition in jobDefinitions">
+      <li class="bg-gray-600 p-2 m-2 text-white" v-for="jobDefinition in jobDefinitions">
         <div v-if="editingJobId === jobDefinition.id">
           Name: 
           <input v-model="jobDefinition.name" />
           Command: 
           <input v-model="jobDefinition.command" />
-          <button class="bg-blue-500 px-2 rounded text-white" @click="save()">Save</button>
-          <button class="bg-red-500 px-2 rounded text-white ml-1" @click="editingJobId = null">Cancel</button>
+          <button class="bg-blue-500 px-3 rounded text-white mx-2" @click="save()">Save</button>
+          <button class="bg-red-500 px-3 rounded text-white mx-2" @click="editingJobId = null">Cancel</button>
         </div>
         <div v-else>
           Name: {{jobDefinition.name }}
           Command: {{jobDefinition.command }}
-          <button class="bg-blue-500 px-2 rounded text-white" @click="editingJobId = jobDefinition.id">Edit</button>
-          <button class="bg-blue-500 px-2 rounded text-white ml-1" @click="schedule(jobDefinition.id)">Schedule</button>
+          <button class="bg-blue-500 px-3 rounded text-white" @click="editingJobId = jobDefinition.id">Edit</button>
+          <button class="bg-blue-500 px-3 rounded text-white ml-1" @click="schedule(jobDefinition.id)">Schedule</button>
         </div>
       </li>
     </ul>
-    <div class="bg-blue-100 p-2">
-    Name:<input v-model="newJobName"/>
-    Command:<input v-model="newJobCommand"/>
-    <button class="bg-blue-500 px-2 rounded text-white ml-1" @click="add">Add</button>
+    <div class="bg-gray-500 text-white mt-3 mx-2 p-2">
+      <span class="block mb-2 text-lg">Adding new command:</span>
+      <span>Name: </span>
+      <input v-model="newJobName"/>
+      <span class="ml-2">Command: </span>
+      <input v-model="newJobCommand"/>
+      <button class="bg-blue-500 px-3 rounded text-white ml-1" @click="add">Add</button>
     </div>
   </div>
 </template>

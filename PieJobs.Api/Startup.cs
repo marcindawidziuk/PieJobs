@@ -26,19 +26,13 @@ namespace PieJobs.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddSpaStaticFiles(configuration: options => { options.RootPath = "wwwroot"; });
             services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "PieJobs.Api", Version = "v1" }); });
 
             var databasePath = Configuration["DatabasePath"];
 
             services
-                // .AddEntityFrameworkSqlite()
                 .AddDbContextFactory<ApplicationDbContext>(a => a.UseSqlite($"Data Source={databasePath}"));
-                //TODO: UseMemoryCache?
-                // .AddDbContextFactory<ApplicationDbContext>(a => a.Use(Configuration.GetConnectionString("DefaultConnection")));
-                
-            // services.AddAuthentication(
-            //         CertificateAuthenticationDefaults.AuthenticationScheme)
-            //     .AddCertificate();
             
             services
                 .AddAuthentication(ApiAuthenticationSchemeOptions.DefaultSchemeName)
@@ -61,6 +55,7 @@ namespace PieJobs.Api
             });
             
             services.AddHostedService<JobExecutorHostedService>();
+            services.AddSpaStaticFiles(options => { options.RootPath = "dist";});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,14 +72,15 @@ namespace PieJobs.Api
                 app.UseOpenApi(p => p.Path = "/swagger/{documentName}/swagger.yaml");
                 app.UseSwaggerUi3(p => p.DocumentPath = "/swagger/{documentName}/swagger.yaml");
             }
-
+            
             app.UseRouting();
 
             app.UseAuthentication();
 
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseSpaStaticFiles();
+            app.UseSpa(_ => {});
 
             var scope = app.ApplicationServices.CreateScope();
             var contextFactory = scope.ServiceProvider.GetRequiredService<IContextFactory>();

@@ -11,7 +11,7 @@ namespace PieJobs.Services
     public interface IJobsService
     {
         Task<int> ScheduleJob(int jobDefinitionId);
-        Task<List<JobDto>> GetAll();
+        Task<List<JobDto>> GetAll(int? maximum);
         Task<int?> GetNextJob();
         Task<string> ExecuteJob(int id);
         Task SetStatus(int jobId, JobStatus jobStatus);
@@ -102,12 +102,12 @@ namespace PieJobs.Services
             return job.Id;
         }
 
-        public async Task<List<JobDto>> GetAll()
+        public async Task<List<JobDto>> GetAll(int? maximum)
         {
             await using var db = _contextFactory.Create();
 
-            return await db.Jobs
-                .Select(x => new JobDto()
+            var jobsQuery =  db.Jobs
+                .Select(x => new JobDto
                 {
                     Id = x.Id,
                     JobDefinitionName = x.JobDefinition.Name,
@@ -117,9 +117,14 @@ namespace PieJobs.Services
                     FinishedDateTimeUtc = x.FinishedDateTimeUtc,
                     Command = x.Command
                 })
-                .OrderByDescending(x => x.ScheduleDateTimeUtc)
-                .ToListAsync();
+                .OrderByDescending(x => x.ScheduleDateTimeUtc);
 
+            if (maximum != null)
+            {
+                return await jobsQuery.Take(maximum.Value).ToListAsync();
+            }
+            
+            return await jobsQuery.ToListAsync();
         }
     }
 }
