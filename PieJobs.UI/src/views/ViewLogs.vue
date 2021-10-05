@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="bg-gray-800 m-2 p-2">
+  <div class="bg-gray-800 m-2 p-2 border-b-2 border-r-2 border-gray-600">
     <div class="bg-gray-800 border-gray-400 m-1 p-0 text-gray-100 border-b-2 pb-2 border-gray-700">
       <span class="my-2 text-white text-lg">{{jobDetails.jobDefinitionName}}</span>
       <JobStatusPill class="mx-2" :job-status="jobDetails.status" />

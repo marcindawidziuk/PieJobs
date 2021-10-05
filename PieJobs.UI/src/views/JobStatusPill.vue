@@ -11,7 +11,7 @@ const classForJobStatus = function (status: JobStatus) {
   if (status === JobStatus.Completed)
     return 'bg-green-300 text-green-900'
   if (status === JobStatus.InProgress)
-    return 'bg-blue-300 text-blue-900'
+    return 'bg-yellow-300 text-yellow-900'
   if (status === JobStatus.Failed)
     return 'bg-red-300 text-red-900'
   if (status === JobStatus.Cancelled)

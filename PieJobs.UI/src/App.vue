@@ -8,14 +8,14 @@ if (userStore.getState().token) {
 
 <template>
   <div class="flex flex-col h-screen justify-between">
-    <header class="bg-gray-800 shadow text-white">
-      <router-link class="text-xl inline-block ml-4 text-white hover:opacity-75" to="/">
+    <header class="bg-gray-800 shadow text-white ">
+      <router-link class="text-xl inline-block ml-4 text-white hover:text-gray-300 pb-5" active-class="border-b-2 border-yellow-700 pb-5"  to="/">
         <img src="/pie.png" class="inline h-7" alt="pie"/> Jobs
       </router-link>
-      <div class="px-2 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8 inline-block">
+      <div class="px-2 pt-6 mx-auto max-w-7xl sm:px-6 lg:px-8 inline-block">
         <div class="flex justify-between">
-          <router-link v-if="userStore.getUser()" class="mr-2 hover:text-gray-300" to="/jobs">Configuration</router-link>
-          <a href="#" @click="userStore.logout()" class="mx-2 hover:text-gray-300" v-if="userStore.getUser()">Logout</a>
+          <router-link v-if="userStore.getUser()" class="mr-2 hover:text-gray-300 text-lg" active-class="border-b-2 border-yellow-700 pb-5" to="/jobs">Configuration</router-link>
+          <a href="#" @click="userStore.logout()" class="mx-2 hover:text-gray-300 text-lg" v-if="userStore.getUser()">Logout</a>
           <router-link to="/login" class="mx-2 hover:text-gray-300" v-else>
             Login
           </router-link>
