@@ -13,9 +13,11 @@
 import {ref} from "vue";
 import {LoginRequestDto, UsersClient} from "../services/api.generated.clients";
 import {userStore} from "../stores/UserStore";
+import {useRouter} from "vue-router";
 const userName = ref("")
 const password = ref("")
 const errorMessage = ref("")
+const router = useRouter()
 
 const login = async function () {
   try {
@@ -28,6 +30,7 @@ const login = async function () {
     if (result.isSuccessful) {
       userStore.setToken(result.apiToken)
       await userStore.refreshUser()
+      await router.push({name: 'Dashboard'})
     }else{
       errorMessage.value = "Invalid credentials"
     }

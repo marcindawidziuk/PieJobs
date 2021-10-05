@@ -10,7 +10,7 @@ export const statusDisplay = function (status: JobStatus){
     if (status == JobStatus.InProgress)
         return "In Progress"
     if (status == JobStatus.Completed)
-        return "Completed"
+        return "Succeeded"
     if (status == JobStatus.Cancelled)
         return "Cancelled"
     return "Failed"

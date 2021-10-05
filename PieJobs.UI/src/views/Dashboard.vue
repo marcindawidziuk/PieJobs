@@ -17,7 +17,8 @@
         </div>
     </div>
     <ul v-if="jobs.length">
-      <li class="m-1 bg-gray-800 p-3 text-gray-50 hover:bg-gray-600" @click="openJobLogs(job.id)" v-for="job in jobs">
+      <li class="m-1 bg-gray-800 p-3 text-gray-50 hover:bg-gray-600 border-b-2 border-gray-600 border-r-2" @click="openJobLogs(job.id)" v-for="job in jobs">
+        
         <span class="font-bold">
           {{ job.jobDefinitionName }}
           <JobStatusPill class="m-2" :job-status="job.status" />

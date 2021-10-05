@@ -1,11 +1,16 @@
 ﻿<template>
   <div class="bg-gray-800 m-2 p-2">
-    <span class="my-2 text-white text-lg">{{jobDetails.jobDefinitionName}}</span>
-    <JobStatusPill class="mx-2" :job-status="jobDetails.status" />
+    <div class="bg-gray-800 border-gray-400 m-1 p-0 text-gray-100 border-b-2 pb-2 border-gray-700">
+      <span class="my-2 text-white text-lg">{{jobDetails.jobDefinitionName}}</span>
+      <JobStatusPill class="mx-2" :job-status="jobDetails.status" />
+      <span class="block text-md">Scheduled: {{ displayUtcTime(jobDetails.scheduleDateTimeUtc) }} {{ displayUtcDate(jobDetails.scheduleDateTimeUtc) }}</span>
+      <span class="block text-md" v-if="jobDetails.startedDateTimeUtc">Started: {{ displayUtcTime(jobDetails.startedDateTimeUtc)}}</span>
+      <span class="block text-md" v-if="jobDetails.finishedDateTimeUtc">Finished: {{ displayUtcTime(jobDetails.finishedDateTimeUtc)}} in {{ secondsBetweenDates(jobDetails.startedDateTimeUtc, jobDetails.finishedDateTimeUtc).toFixed(2) }} seconds</span>
+    </div>
     <span v-if="logLines.length === 0" class="text-red-100">No logs to display</span>
-    <div v-for="log in logLines" class="block">
+    <div v-for="log in logLines" class="block text-sm">
       <span :class="log.isError ? 'text-red-300' : 'text-gray-50'">
-        {{ displayUtcDate(log.dateTimeUtc) }} {{ log.text }}
+        {{ displayUtcTime(log.dateTimeUtc) }} {{ log.text }}
       </span>
     </div>
   </div>
@@ -16,12 +21,20 @@ import {computed, onMounted, ref} from "vue";
 import {JobDto, JobsClient, LogLineDto, LogsClient} from "../services/api.generated.clients";
 import {useRoute} from "vue-router";
 import JobStatusPill from "./JobStatusPill.vue";
+import {secondsBetweenDates} from "../utils"
+
+const displayUtcTime =  function (date: Date){
+  if (!date)
+    return ""
+  const utcDte = new Date(date.toUTCString())
+  return `${utcDte.toLocaleTimeString()}` 
+}
 
 const displayUtcDate =  function (date: Date){
   if (!date)
     return ""
   const utcDte = new Date(date.toUTCString())
-  return `${utcDte.toLocaleTimeString()}` 
+  return `${utcDte.toLocaleDateString()}`
 }
 
 const logLines = ref<LogLineDto[]>([])
