@@ -23,7 +23,7 @@
           <span class="mx-1 p-0.5 rounded" :class="classForJobStatus(job.status)">{{ statusDisplay(job.status) }}</span>
         </span>
         <span class="block text-sm" v-if="job.finishedDateTimeUtc">Finished: {{ displayUtcDate(job.finishedDateTimeUtc)}}</span>
-        <span class="text-sm" v-if="job.finishedDateTimeUtc">Took: {{ secondsBetweenDates(job.startedDateTimeUtc, job.finishedDateTimeUtc)}} seconds</span>
+        <span class="text-sm" v-if="job.finishedDateTimeUtc">Took: {{ secondsBetweenDates(job.startedDateTimeUtc, job.finishedDateTimeUtc).toFixed(2) }} seconds</span>
         <span class="block text-sm" v-else-if="job.startedDateTimeUtc">Started: {{ displayUtcDate(job.startedDateTimeUtc)}}</span>
         <span class="block text-sm" v-else>Scheduled: {{ displayUtcDate(job.scheduleDateTimeUtc) }}</span>
       </li>
@@ -82,6 +82,7 @@ const init = async function () {
     const client = new JobsClient();
     jobs.value = await client.get()
     isInitialised.value = true;
+    errorMessage.value = ""
   } catch (e) {
     console.log("Failed loading jobs", e)
     errorMessage.value = "Failed loading jobs"
