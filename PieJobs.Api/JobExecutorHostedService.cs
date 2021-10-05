@@ -27,6 +27,8 @@ namespace PieJobs.Api
 
         private async Task BackgroundProcessing(CancellationToken stoppingToken)
         {
+            await CancelJobsInProgress();
+            
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -38,8 +40,14 @@ namespace PieJobs.Api
                     {
                         try
                         {
-                            await service.ExecuteJob(nextJob.Value);
-                            await service.SetStatus(nextJob.Value, JobStatus.Completed);
+                            var result = await service.ExecuteJob(nextJob.Value);
+                            if (result.ExitCode < 0)
+                                await service.SetStatus(nextJob.Value, JobStatus.Failed);
+                            else
+                                await service.SetStatus(nextJob.Value, JobStatus.Completed);
+
+                            var logsService = scope.ServiceProvider.GetRequiredService<ILogsService>();
+                            await logsService.SaveLogs(result.Logs);
                         }
                         catch (Exception ex)
                         {
@@ -54,6 +62,23 @@ namespace PieJobs.Api
                 }
                 
                 await Task.Delay(1000, stoppingToken);
+            }
+        }
+
+        private async Task CancelJobsInProgress()
+        {
+            try
+            {
+                
+                // If we restart while the program is executing a command
+                // it will be stuck with 'in progress' status
+                using var startScope = _serviceProvider.CreateScope();
+                var jobsService = startScope.ServiceProvider.GetRequiredService<IJobsService>();
+                await jobsService.CancelJobsInProgress();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed cancelling jobs in progress");
             }
         }
 

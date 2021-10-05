@@ -17,13 +17,12 @@
         </div>
     </div>
     <ul v-if="jobs.length">
-      <li class="m-1 bg-gray-800 p-3 text-white" v-for="job in jobs">
+      <li class="m-1 bg-gray-800 p-3 text-gray-50 hover:bg-gray-600" @click="openJobLogs(job.id)" v-for="job in jobs">
         <span class="font-bold">
           {{ job.jobDefinitionName }}
-          <span class="mx-1 p-0.5 rounded" :class="classForJobStatus(job.status)">{{ statusDisplay(job.status) }}</span>
+          <JobStatusPill class="m-2" :job-status="job.status" />
         </span>
-        <span class="block text-sm" v-if="job.finishedDateTimeUtc">Finished: {{ displayUtcDate(job.finishedDateTimeUtc)}}</span>
-        <span class="text-sm" v-if="job.finishedDateTimeUtc">Took: {{ secondsBetweenDates(job.startedDateTimeUtc, job.finishedDateTimeUtc).toFixed(2) }} seconds</span>
+        <span class="block text-sm" v-if="job.finishedDateTimeUtc">Finished: {{ displayUtcDate(job.finishedDateTimeUtc)}} in {{ secondsBetweenDates(job.startedDateTimeUtc, job.finishedDateTimeUtc).toFixed(2) }} seconds</span>
         <span class="block text-sm" v-else-if="job.startedDateTimeUtc">Started: {{ displayUtcDate(job.startedDateTimeUtc)}}</span>
         <span class="block text-sm" v-else>Scheduled: {{ displayUtcDate(job.scheduleDateTimeUtc) }}</span>
       </li>
@@ -36,38 +35,20 @@
 </template>
 
 <script setup lang="ts">
-import {JobDto, JobsClient, JobStatus} from "../services/api.generated.clients";
-import {onBeforeUnmount, onMounted, ref} from "vue";
+import {JobDto, JobsClient} from "../services/api.generated.clients";
+import {onBeforeUnmount, onMounted, ref, watch} from "vue";
+import {secondsBetweenDates} from "../utils"
+import JobStatusPill from "./JobStatusPill.vue";
+import {useRouter} from "vue-router";
 
 const jobs = ref<JobDto[]>([])
 const maxJobs = ref(10)
 const isInitialised = ref(false)
 const errorMessage = ref("")
+const router = useRouter()
 
-const classForJobStatus = function (status: JobStatus) {
-  if (status === JobStatus.Completed)
-    return 'bg-green-700'
-  if (status === JobStatus.InProgress)
-    return 'bg-blue-700'
-  if (status === JobStatus.Failed)
-    return 'bg-red-700'
-  if (status === JobStatus.Cancelled)
-    return 'bg-indigo-700'
-  return 'bg-gray-700'
-}
-
-const secondsBetweenDates = function (date1: Date, date2: Date){
-  return (date2 - date1) / 1000;
-}
-
-const statusDisplay = function (status: JobStatus){
-  if (status == JobStatus.Pending)
-    return "Pending"
-  if (status == JobStatus.InProgress)
-    return "In Progress"
-  if (status == JobStatus.Completed)
-    return "Completed"
-  return "Failed"
+const openJobLogs = function(jobId: number){
+  router.push({name: 'ViewLogs', params: {id: jobId}})
 }
 
 const displayUtcDate =  function (date: Date){
@@ -80,7 +61,7 @@ const displayUtcDate =  function (date: Date){
 const init = async function () {
   try {
     const client = new JobsClient();
-    jobs.value = await client.get()
+    jobs.value = await client.getAll(maxJobs.value)
     isInitialised.value = true;
     errorMessage.value = ""
   } catch (e) {
@@ -88,6 +69,8 @@ const init = async function () {
     errorMessage.value = "Failed loading jobs"
   }
 }
+
+watch(maxJobs, () => init())
 
 const timer = ref(0)
 

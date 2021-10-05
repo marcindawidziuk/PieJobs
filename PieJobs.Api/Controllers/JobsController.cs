@@ -21,10 +21,16 @@ namespace PieJobs.Api.Controllers
             return await _jobsService.ScheduleJob(jobDefinitionId);
         }
         
-        [HttpPost("get")]
+        [HttpPost("get-all")]
         public async Task<List<JobDto>> GetAll(int? maximum)
         {
             return await _jobsService.GetAll(maximum);
+        }
+        
+        [HttpPost("get/{jobId}")]
+        public async Task<JobDto> Get(int jobId)
+        {
+            return await _jobsService.Get(jobId);
         }
     }
 }

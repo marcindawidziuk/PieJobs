@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using PieJobs.Data;
@@ -12,9 +13,11 @@ namespace PieJobs.Services
     {
         Task<int> ScheduleJob(int jobDefinitionId);
         Task<List<JobDto>> GetAll(int? maximum);
+        Task<JobDto> Get(int jobId);
         Task<int?> GetNextJob();
-        Task<string> ExecuteJob(int id);
+        Task<JobsService.ProcessResult> ExecuteJob(int id);
         Task SetStatus(int jobId, JobStatus jobStatus);
+        Task CancelJobsInProgress();
     }
 
     public class JobDto
@@ -48,7 +51,7 @@ namespace PieJobs.Services
             return job?.Id;
         }
 
-        public async Task<string> ExecuteJob(int id)
+        public async Task<ProcessResult> ExecuteJob(int id)
         {
             await using var db = _contextFactory.Create();
 
@@ -58,20 +61,68 @@ namespace PieJobs.Services
             await db.SaveChangesAsync();
 
             // Start the child process.
-            var process = new Process();
+            using var process = new Process();
             // Redirect the output stream of the child process.
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
             process.StartInfo.FileName = job.Command;
-            process.Start();
             // Do not wait for the child process to exit before
             // reading to the end of its redirected stream.
             // p.WaitForExit();
             // Read the output stream first and then wait.
-            var output = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            Directory.CreateDirectory(Path.GetDirectoryName($"logs/{id}.log"));
+            await using var file = File.CreateText($"logs/{id}.log");
 
-            return output;
+            var logs = new List<LogLine>();
+            
+            var lineNumber = 1;
+
+            process.OutputDataReceived += (_, args) =>
+            {
+                if (string.IsNullOrEmpty(args.Data))
+                    return;
+                
+                var log = new LogLine
+                {
+                    DateTimeUtc = DateTime.UtcNow,
+                    Text = args.Data,
+                    JobId = id,
+                    LineNumber = lineNumber
+                };
+                logs.Add(log);
+            };
+            
+            process.ErrorDataReceived += (_, args) =>
+            {
+                if (string.IsNullOrEmpty(args.Data))
+                    return;
+                
+                var log = new LogLine
+                {
+                    DateTimeUtc = DateTime.UtcNow,
+                    Text = args.Data,
+                    JobId = id,
+                    LineNumber = lineNumber,
+                    IsError = true
+                };
+                logs.Add(log);
+            };
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            await process.WaitForExitAsync();
+            return new ProcessResult()
+            {
+                ExitCode = process.ExitCode,
+                Logs = logs
+            };
+        }
+
+        public class ProcessResult
+        {
+            public int ExitCode { get; set; }
+            public List<LogLine> Logs { get; set; }
         }
 
         public async Task SetStatus(int jobId, JobStatus jobStatus)
@@ -81,6 +132,21 @@ namespace PieJobs.Services
             var job = await db.Jobs.SingleAsync(x => x.Id == jobId);
             job.Status = jobStatus;
             job.FinishedDateTimeUtc = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+        }
+
+        public async Task CancelJobsInProgress()
+        {
+            await using var db = _contextFactory.Create();
+
+            var jobs = await db.Jobs.Where(x => x.Status == JobStatus.InProgress).ToListAsync();
+            
+            foreach (var job in jobs)
+            {
+                job.Status = JobStatus.Cancelled;
+                job.FinishedDateTimeUtc = DateTime.UtcNow;
+            }
+
             await db.SaveChangesAsync();
         }
 
@@ -102,11 +168,29 @@ namespace PieJobs.Services
             return job.Id;
         }
 
+
+        public async Task<JobDto> Get(int jobId)
+        {
+            await using var db = _contextFactory.Create();
+
+            return await db.Jobs
+                .Where(x => x.Id == jobId)
+                .Select(x => new JobDto
+                {
+                    Id = x.Id,
+                    JobDefinitionName = x.JobDefinition.Name,
+                    Status = x.Status,
+                    ScheduleDateTimeUtc = x.ScheduleDateTimeUtc,
+                    StartedDateTimeUtc = x.StartedDateTimeUtc,
+                    FinishedDateTimeUtc = x.FinishedDateTimeUtc,
+                    Command = x.Command
+                }).SingleAsync();
+        }
         public async Task<List<JobDto>> GetAll(int? maximum)
         {
             await using var db = _contextFactory.Create();
 
-            var jobsQuery =  db.Jobs
+            var jobsQuery = db.Jobs
                 .Select(x => new JobDto
                 {
                     Id = x.Id,

@@ -46,6 +46,7 @@ namespace PieJobs.Api
             services.AddScoped<IPasswordService, PasswordService>();
             services.AddScoped<IJobDefinitionService, JobDefinitionService>();
             services.AddScoped<IUsersService, UsersService>();
+            services.AddScoped<ILogsService, LogsService>();
             
             services.AddOpenApiDocument(document =>
             {

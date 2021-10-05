@@ -21,9 +21,9 @@
     <div class="bg-gray-500 text-white mt-3 mx-2 p-2">
       <span class="block mb-2 text-lg">Adding new command:</span>
       <span>Name: </span>
-      <input v-model="newJobName"/>
+      <input v-model="newJobName" class="text-black"/>
       <span class="ml-2">Command: </span>
-      <input v-model="newJobCommand"/>
+      <input v-model="newJobCommand" class="text-black"/>
       <button class="bg-blue-500 px-3 rounded text-white ml-1" @click="add">Add</button>
     </div>
   </div>
@@ -37,6 +37,7 @@ import {
   JobsClient
 } from "../services/api.generated.clients";
 import {onMounted, ref} from "vue";
+import {useRouter} from "vue-router";
 
 const jobDefinitions = ref<JobDefinitionDto[]>([])
 const newJobName = ref("")
@@ -54,6 +55,8 @@ const save = async function(){
       command: selectedJob.command
     });
     await client.edit(dto, editingJobId.value)
+    editingJobId.value = null;
+    await init()
   } catch (e) {
     console.log("Failed saving job", e)
     alert("Failed saving job")
@@ -87,11 +90,13 @@ const add = async function () {
   }
 }
 
+const router = useRouter()
+
 const schedule = async function (jobDefinitionId: number) {
   try {
     const client = new JobsClient();
     await client.schedule(jobDefinitionId)
-    await init();
+    await router.push({name: 'Dashboard'})
   } catch (e) {
     console.log("Failed loading job definitions", e)
     alert("Failed loading job definitions")

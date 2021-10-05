@@ -8,6 +8,7 @@ export const routes = [
   { path: '/', name: 'Dashboard', component: () => import("./views/Dashboard.vue"), meta: { title: 'Home' } },
   { path: '/jobs', component: () => import("./views/ManageJobDefinitions.vue"), meta: { title: 'Job Definitions' } },
   { path: '/login', component: () => import("./views/Login.vue"), meta: { title: 'Login' } },
+  { path: '/logs/:id', name: 'ViewLogs', component: () => import("./views/ViewLogs.vue"), meta: { title: 'Logs' } },
   { path: '/password', component: () => import("./views/ChangePassword.vue"), meta: { title: 'Change Password' } },
   {
     path: '/about',

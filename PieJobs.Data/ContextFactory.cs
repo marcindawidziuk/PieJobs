@@ -31,6 +31,7 @@ namespace PieJobs.Data
         public DbSet<Job> Jobs { get; set; }
         public DbSet<JobDefinition> JobDefinitions { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<LogLine> LogLines { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -325,8 +325,8 @@ export class JobsClient {
         return Promise.resolve<number>(<any>null);
     }
 
-    get(maximum?: number | null | undefined , cancelToken?: CancelToken | undefined): Promise<JobDto[]> {
-        let url_ = this.baseUrl + "/api/Jobs/get?";
+    getAll(maximum?: number | null | undefined , cancelToken?: CancelToken | undefined): Promise<JobDto[]> {
+        let url_ = this.baseUrl + "/api/Jobs/get-all?";
         if (maximum !== undefined && maximum !== null)
             url_ += "maximum=" + encodeURIComponent("" + maximum) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -347,11 +347,11 @@ export class JobsClient {
                 throw _error;
             }
         }).then((_response: AxiosResponse) => {
-            return this.processGet(_response);
+            return this.processGetAll(_response);
         });
     }
 
-    protected processGet(response: AxiosResponse): Promise<JobDto[]> {
+    protected processGetAll(response: AxiosResponse): Promise<JobDto[]> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -379,6 +379,119 @@ export class JobsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<JobDto[]>(<any>null);
+    }
+
+    get(jobId: number , cancelToken?: CancelToken | undefined): Promise<JobDto> {
+        let url_ = this.baseUrl + "/api/Jobs/get/{jobId}";
+        if (jobId === undefined || jobId === null)
+            throw new Error("The parameter 'jobId' must be defined.");
+        url_ = url_.replace("{jobId}", encodeURIComponent("" + jobId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <AxiosRequestConfig>{
+            method: "POST",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGet(_response);
+        });
+    }
+
+    protected processGet(response: AxiosResponse): Promise<JobDto> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = JobDto.fromJS(resultData200);
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<JobDto>(<any>null);
+    }
+}
+
+export class LogsClient {
+    private instance: AxiosInstance = appAxiosInstance;
+    // @ts-ignore
+    private baseUrl: string = import.meta.env.VITE_API_URL as string;
+
+    getForJob(jobId: number , cancelToken?: CancelToken | undefined): Promise<LogLineDto[]> {
+        let url_ = this.baseUrl + "/api/Logs/get-for-job/{jobId}";
+        if (jobId === undefined || jobId === null)
+            throw new Error("The parameter 'jobId' must be defined.");
+        url_ = url_.replace("{jobId}", encodeURIComponent("" + jobId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <AxiosRequestConfig>{
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "application/json"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetForJob(_response);
+        });
+    }
+
+    protected processGetForJob(response: AxiosResponse): Promise<LogLineDto[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LogLineDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<LogLineDto[]>(<any>null);
     }
 }
 
@@ -747,6 +860,58 @@ export enum JobStatus {
     Completed = 2,
     Cancelled = 3,
     Failed = 4,
+}
+
+export class LogLineDto implements ILogLineDto {
+    id!: number;
+    text!: string;
+    dateTimeUtc!: Date;
+    isError!: boolean;
+    lineNumber!: number;
+
+    constructor(data?: ILogLineDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.text = _data["text"];
+            this.dateTimeUtc = _data["dateTimeUtc"] ? new Date(_data["dateTimeUtc"].toString()) : <any>undefined;
+            this.isError = _data["isError"];
+            this.lineNumber = _data["lineNumber"];
+        }
+    }
+
+    static fromJS(data: any): LogLineDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new LogLineDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["text"] = this.text;
+        data["dateTimeUtc"] = this.dateTimeUtc ? this.dateTimeUtc.toISOString() : <any>undefined;
+        data["isError"] = this.isError;
+        data["lineNumber"] = this.lineNumber;
+        return data; 
+    }
+}
+
+export interface ILogLineDto {
+    id: number;
+    text: string;
+    dateTimeUtc: Date;
+    isError: boolean;
+    lineNumber: number;
 }
 
 export class LoginResultDto implements ILoginResultDto {
