@@ -88,7 +88,7 @@ namespace PieJobs.Services
                     DateTimeUtc = DateTime.UtcNow,
                     Text = args.Data,
                     JobId = id,
-                    LineNumber = lineNumber
+                    LineNumber = lineNumber++
                 };
                 logs.Add(log);
             };
@@ -103,7 +103,7 @@ namespace PieJobs.Services
                     DateTimeUtc = DateTime.UtcNow,
                     Text = args.Data,
                     JobId = id,
-                    LineNumber = lineNumber,
+                    LineNumber = lineNumber++,
                     IsError = true
                 };
                 logs.Add(log);
