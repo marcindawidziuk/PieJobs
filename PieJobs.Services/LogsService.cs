@@ -10,7 +10,7 @@ namespace PieJobs.Services
     public interface ILogsService
     {
         Task<List<LogLineDto>> GetLogsForJob(int jobId);
-        Task SaveLogs(IEnumerable<LogLine> logLines);
+        Task AddLog(LogLine logLine);
     }
 
     public class LogLineDto
@@ -29,6 +29,14 @@ namespace PieJobs.Services
         public LogsService(IContextFactory contextFactory)
         {
             _contextFactory = contextFactory;
+        }
+
+        public async Task AddLog(LogLine logLine)
+        {
+            await using var db = _contextFactory.Create();
+
+            db.LogLines.Add(logLine);
+            await db.SaveChangesAsync();
         }
 
         public async Task<List<LogLineDto>> GetLogsForJob(int jobId)

@@ -15,11 +15,15 @@ namespace PieJobs.Services
         Task<List<JobDto>> GetAll(int? maximum);
         Task<JobDto> Get(int jobId);
         Task<int?> GetNextJob();
-        Task<JobsService.ProcessResult> ExecuteJob(int id);
+        Task<ProcessResult> ExecuteJob(int id);
         Task SetStatus(int jobId, JobStatus jobStatus);
         Task CancelJobsInProgress();
     }
 
+    public class ProcessResult
+    {
+        public int ExitCode { get; set; }
+    }
     public class JobDto
     {
         public int Id { get; set; }
@@ -34,9 +38,12 @@ namespace PieJobs.Services
     public class JobsService : IJobsService
     {
         private readonly IContextFactory _contextFactory;
-        public JobsService(IContextFactory contextFactory)
+        private readonly ILogsService _logsService;
+
+        public JobsService(IContextFactory contextFactory, ILogsService logsService)
         {
             _contextFactory = contextFactory;
+            _logsService = logsService;
         }
 
         public async Task<int?> GetNextJob()
@@ -74,8 +81,6 @@ namespace PieJobs.Services
             Directory.CreateDirectory(Path.GetDirectoryName($"logs/{id}.log"));
             await using var file = File.CreateText($"logs/{id}.log");
 
-            var logs = new List<LogLine>();
-            
             var lineNumber = 1;
 
             process.OutputDataReceived += (_, args) =>
@@ -90,7 +95,7 @@ namespace PieJobs.Services
                     JobId = id,
                     LineNumber = lineNumber++
                 };
-                logs.Add(log);
+                _logsService.AddLog(log);
             };
             
             process.ErrorDataReceived += (_, args) =>
@@ -106,24 +111,19 @@ namespace PieJobs.Services
                     LineNumber = lineNumber++,
                     IsError = true
                 };
-                logs.Add(log);
+                _logsService.AddLog(log);
             };
             process.Start();
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             await process.WaitForExitAsync();
-            return new ProcessResult()
+            
+            return new ProcessResult
             {
-                ExitCode = process.ExitCode,
-                Logs = logs
+                ExitCode = process.ExitCode
             };
         }
 
-        public class ProcessResult
-        {
-            public int ExitCode { get; set; }
-            public List<LogLine> Logs { get; set; }
-        }
 
         public async Task SetStatus(int jobId, JobStatus jobStatus)
         {
@@ -211,4 +211,5 @@ namespace PieJobs.Services
             return await jobsQuery.ToListAsync();
         }
     }
+    
 }

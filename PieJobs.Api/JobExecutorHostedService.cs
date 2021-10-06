@@ -46,8 +46,6 @@ namespace PieJobs.Api
                             else
                                 await service.SetStatus(nextJob.Value, JobStatus.Completed);
 
-                            var logsService = scope.ServiceProvider.GetRequiredService<ILogsService>();
-                            await logsService.SaveLogs(result.Logs);
                         }
                         catch (Exception ex)
                         {

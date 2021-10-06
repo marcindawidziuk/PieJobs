@@ -17,8 +17,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from "vue";
-import {JobDto, JobsClient, LogLineDto, LogsClient} from "../services/api.generated.clients";
+import {computed, onBeforeUnmount, onMounted, ref} from "vue";
+import {JobDto, JobsClient, JobStatus, LogLineDto, LogsClient} from "../services/api.generated.clients";
 import {useRoute} from "vue-router";
 import JobStatusPill from "./JobStatusPill.vue";
 import {secondsBetweenDates} from "../utils"
@@ -59,5 +59,18 @@ const init = async function(){
 
 onMounted(() => {
   init()
+  timer.value = setInterval(() =>{ 
+    if (jobDetails.value.status == JobStatus.InProgress 
+        || jobDetails.value.status == JobStatus.Pending){
+      init()
+    }
+  }, 1000)
+})
+
+const timer = ref(0)
+
+onBeforeUnmount(() => {
+  if (timer.value)
+    clearTimeout(timer.value)
 })
 </script>
